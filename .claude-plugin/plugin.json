@@ -1,6 +1,6 @@
 {
   "name": "typing-practice",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "等待 AI 回覆時在側邊面板練習打字，即時顯示 WPM 與正確率",
   "author": { "name": "Warren Lin", "url": "https://github.com/WarrenLin" },
   "repository": "https://github.com/WarrenLin/claude-typing-practice",

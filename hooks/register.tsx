@@ -6,6 +6,8 @@ import type { Round, Stats } from '../types'
 const PANE = 'typing'
 const FIELD = 'typing-field'
 const STORE_KEY = 'stats'
+/** false = 已用 /typing off 暫停，turn.start 不自動打開 */
+const AUTO_OPEN_KEY = 'autoOpen'
 
 const SENTENCES = [
   'The quick brown fox jumps over the lazy dog.',
@@ -78,19 +80,27 @@ export const register: Register = on => {
     if (saved) await update($, stats, () => saved)
     await $.command.register({
       name: 'typing',
-      description: '開啟打字練習面板（等 AI 回覆時練 WPM）',
+      description: '開啟打字練習面板（等 AI 回覆時練 WPM）；off 暫停自動開啟',
+      argumentHint: '[on|off]',
     })
     return next(e)
   })
 
-  on('command.run', { command: 'typing' }, async $ => {
+  on('command.run', { command: 'typing' }, async ($, e) => {
+    const arg = e.args.trim().toLowerCase()
+    if (arg === 'off') {
+      await $.store.set(AUTO_OPEN_KEY, false)
+      await $.ui.close({ id: PANE })
+      return { text: '打字練習已暫停，AI 回覆時不會再自動打開；輸入 /typing 恢復。' }
+    }
+    await $.store.set(AUTO_OPEN_KEY, true)
     await openPane($)
     return { text: '打字練習面板已開啟，直接開始打字；Esc 關閉面板。' }
   })
 
   // 送出 prompt 後 AI 開始回覆時，自動打開面板並請求鍵盤焦點
   on('turn.start', async ($, e, next) => {
-    void openPane($)
+    if ((await $.store.get(AUTO_OPEN_KEY)) !== false) void openPane($)
     return next(e)
   })
 
