@@ -6,6 +6,8 @@ import type { Round, Stats } from '../types'
 const PANE = 'typing'
 const FIELD = 'typing-field'
 const STORE_KEY = 'stats'
+/** false = 使用者手動關過面板，turn.start 不再自動打開 */
+const AUTO_OPEN_KEY = 'autoOpen'
 
 const SENTENCES = [
   'The quick brown fox jumps over the lazy dog.',
@@ -55,7 +57,7 @@ const wpmOf = (r: Round) => {
 }
 
 const openPane = ($: EngineInterface) =>
-  $.ui.open({ id: PANE, title: 'Typing', focus: true })
+  $.ui.open({ id: PANE, title: 'Typing', focus: true, closeOnEscape: true })
 
 const finish = async ($: EngineInterface, r: Round) => {
   if (r.typed.length > 0 && r.startedAt > 0) {
@@ -83,14 +85,25 @@ export const register: Register = on => {
     return next(e)
   })
 
+  // /typing 打開面板，並恢復「AI 回覆時自動打開」
   on('command.run', { command: 'typing' }, async $ => {
+    await $.store.set(AUTO_OPEN_KEY, true)
     await openPane($)
-    return { text: '打字練習面板已開啟，直接開始打字；Esc 交還鍵盤。' }
+    return { text: '打字練習面板已開啟（已恢復自動開啟）；Esc 關閉面板。' }
   })
 
   // 送出 prompt 後 AI 開始回覆時，自動打開面板並請求鍵盤焦點
   on('turn.start', async ($, e, next) => {
-    void openPane($)
+    if ((await $.store.get(AUTO_OPEN_KEY)) !== false) void openPane($)
+    return next(e)
+  })
+
+  // 使用者自己關掉面板（Esc 或關閉符號）後，就不再自動打開，直到再次執行 /typing
+  on('ui.close', async ($, e, next) => {
+    if (e.id === PANE && e.origin.kind === 'person') {
+      await $.store.set(AUTO_OPEN_KEY, false)
+      void $.ui.toast('打字練習不會再自動開啟，想練時輸入 /typing')
+    }
     return next(e)
   })
 
@@ -175,7 +188,7 @@ export const register: Register = on => {
           <Text dimColor>
             最佳 {s.best} · 平均 {avg} · 已完成 {s.rounds} 回合
           </Text>
-          <Text dimColor>打完自動換句 · Enter 跳過 · Esc 交還鍵盤</Text>
+          <Text dimColor>打完自動換句 · Enter 跳過 · Esc 關閉</Text>
         </Box>
       </Box>
     )
