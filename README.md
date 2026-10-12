@@ -121,6 +121,15 @@ claude --plugin-dir .
 └── tests/typing.test.ts   # 測試
 ```
 
+## 版本紀錄
+
+| 版本 | 變更 |
+| --- | --- |
+| 0.4.0 | 新增 `/typing off` 暫停自動開啟、`/typing on` 恢復 |
+| 0.3.0 | `Esc` 只關閉當次，下次 Claude 回覆仍自動開啟 |
+| 0.2.0 | `Esc` 直接關閉面板 |
+| 0.1.0 | 初版：自動開啟練習面板、即時 WPM／正確率、成績紀錄 |
+
 ## License
 
 [MIT](LICENSE) © Warren Lin
