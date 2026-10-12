@@ -1,0 +1,4 @@
+# Claude Code 產生的型別檔（claude plugin validate / 開發時自動產生）
+.claude-plugin/types/
+node_modules/
+.DS_Store

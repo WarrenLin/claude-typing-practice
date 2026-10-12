@@ -1,0 +1,5 @@
+{
+  "name": "warren-mods",
+  "owner": { "name": "Warren Lin" },
+  "plugins": [{ "name": "typing-practice", "source": "./" }]
+}
