@@ -6,8 +6,6 @@ import type { Round, Stats } from '../types'
 const PANE = 'typing'
 const FIELD = 'typing-field'
 const STORE_KEY = 'stats'
-/** false = 使用者手動關過面板，turn.start 不再自動打開 */
-const AUTO_OPEN_KEY = 'autoOpen'
 
 const SENTENCES = [
   'The quick brown fox jumps over the lazy dog.',
@@ -85,27 +83,17 @@ export const register: Register = on => {
     return next(e)
   })
 
-  // /typing 打開面板，並恢復「AI 回覆時自動打開」
   on('command.run', { command: 'typing' }, async $ => {
-    await $.store.set(AUTO_OPEN_KEY, true)
     await openPane($)
-    return { text: '打字練習面板已開啟（已恢復自動開啟）；Esc 關閉面板。' }
+    return { text: '打字練習面板已開啟，直接開始打字；Esc 關閉面板。' }
   })
 
   // 送出 prompt 後 AI 開始回覆時，自動打開面板並請求鍵盤焦點
   on('turn.start', async ($, e, next) => {
-    if ((await $.store.get(AUTO_OPEN_KEY)) !== false) void openPane($)
+    void openPane($)
     return next(e)
   })
 
-  // 使用者自己關掉面板（Esc 或關閉符號）後，就不再自動打開，直到再次執行 /typing
-  on('ui.close', async ($, e, next) => {
-    if (e.id === PANE && e.origin.kind === 'person') {
-      await $.store.set(AUTO_OPEN_KEY, false)
-      void $.ui.toast('打字練習不會再自動開啟，想練時輸入 /typing')
-    }
-    return next(e)
-  })
 
   on('ui.input', async ($, e, next) => {
     if (e.plugin !== 'typing-practice' || e.element !== FIELD) return next(e)
